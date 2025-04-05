@@ -4,7 +4,7 @@ import torch.nn as nn
 import torchvision.models as tvmodels
 
 
-__all__ = ["mobilenet_v3_small", "vgg16"]
+__all__ = ["mobilenet_v3_small", "vgg16", "alexnet", "efficientnet"]
 
 
 class TorchVisionModel(nn.Module):
@@ -13,7 +13,12 @@ class TorchVisionModel(nn.Module):
 
         self.loss = loss
         self.backbone = tvmodels.__dict__[name](pretrained=pretrained)
-        self.feature_dim = self.backbone.classifier[0].in_features
+        
+        # if the first layer of classifier is Dropout, get in_features from the next layer. i.e. Linear
+        if self.backbone.classifier[0].__class__.__name__ == "Dropout":
+            self.feature_dim = self.backbone.classifier[1].in_features
+        else:
+            self.feature_dim = self.backbone.classifier[0].in_features
 
         # overwrite the classifier used for ImageNet pretrianing
         # nn.Identity() will do nothing, it's just a place-holder
@@ -50,6 +55,28 @@ def vgg16(num_classes, loss={"xent"}, pretrained=True, **kwargs):
 def mobilenet_v3_small(num_classes, loss={"xent"}, pretrained=True, **kwargs):
     model = TorchVisionModel(
         "mobilenet_v3_small",
+        num_classes=num_classes,
+        loss=loss,
+        pretrained=pretrained,
+        **kwargs,
+    )
+    return model
+
+
+def alexnet(num_classes, loss={"xent"}, pretrained=True, **kwargs):
+    model = TorchVisionModel(
+        "alexnet",
+        num_classes=num_classes,
+        loss=loss,
+        pretrained=pretrained,
+        **kwargs,
+    )
+    return model
+
+
+def efficientnet(num_classes, loss={"xent"}, pretrained=True, **kwargs):
+    model = TorchVisionModel(
+        "efficientnet_b7",
         num_classes=num_classes,
         loss=loss,
         pretrained=pretrained,
