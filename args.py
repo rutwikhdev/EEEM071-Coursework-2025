@@ -68,6 +68,16 @@ def argument_parser():
         action="store_true",
         help="randomly alter the intensities of RGB channels",
     )
+    parser.add_argument(
+        "--gaussian-blur",
+        action="store_true",
+        help="blurs the image with randomly chosen gaussian blur",
+    )
+    parser.add_argument(
+        "--random-crop",
+        action="store_true",
+        help="randomly resize and crop the image",
+    )
 
     # ************************************************************
     # Optimization options
@@ -278,6 +288,8 @@ def dataset_kwargs(parsed_args):
         "random_erase": parsed_args.random_erase,
         "color_jitter": parsed_args.color_jitter,
         "color_aug": parsed_args.color_aug,
+        "gaussian_blur": parsed_args.gaussian_blur,
+        "random_crop": parsed_args.random_crop,
     }
 
 
