@@ -2,10 +2,81 @@
 
 import os.path as osp
 import shutil
+import os
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from .iotools import mkdir_if_missing
+
+def save_plots(model_name, batch_plt_data, epoch_plt_data, save_dir):
+    epochs = list(range(1, len(epoch_plt_data["accs"]) + 1))
+
+    # Figure 1: Cross-Entropy Loss
+    plt.figure(figsize=(8, 6))
+    plt.plot(epochs, epoch_plt_data["xent_losses"], label="Cross-Entropy Loss", color='b', marker='o')
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.title("Cross-Entropy Loss over Epochs")
+    plt.legend()
+    plt.grid(True, linestyle="--", alpha=0.6)
+    plt.savefig(osp.join(save_dir, "cross_entropy_loss.png"), dpi=300, bbox_inches="tight")
+    plt.close()
+
+    # Figure 2: Triplet Loss
+    plt.figure(figsize=(8, 6))
+    plt.plot(epochs, epoch_plt_data["htri_losses"], label="Triplet Loss", color='r', marker='s')
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.title("Triplet Loss over Epochs")
+    plt.legend()
+    plt.grid(True, linestyle="--", alpha=0.6)
+    plt.savefig(osp.join(save_dir, "triplet_loss.png"), dpi=300, bbox_inches="tight")
+    plt.close()
+
+    # Figure 3: Accuracy
+    plt.figure(figsize=(8, 6))
+    plt.plot(epochs, epoch_plt_data["accs"], label="Accuracy", color='g', marker='^')
+    plt.xlabel("Epochs")
+    plt.ylabel("Accuracy")
+    plt.title("Accuracy over Epochs")
+    plt.legend()
+    plt.grid(True, linestyle="--", alpha=0.6)
+    plt.savefig(os.path.join(save_dir, "accuracy.png"), dpi=300, bbox_inches="tight")
+    plt.close()
+
+    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(18, 5))
+    # Set a common title
+    fig.suptitle(model_name, fontsize=16, fontweight='bold')
+
+    # Plot Cross-Entropy Loss
+    axes[0].plot(epochs, epoch_plt_data["xent_losses"], label="Cross-Entropy Loss", color='b', marker='o')
+    axes[0].set_title("Cross-Entropy Loss", fontsize=12)
+    axes[0].set_xlabel("Epochs")
+    axes[0].set_ylabel("Loss")
+    axes[0].grid(True, linestyle="--", alpha=0.6)
+
+    # Plot Triplet Loss
+    axes[1].plot(epochs, epoch_plt_data["htri_losses"], label="Triplet Loss", color='r', marker='s')
+    axes[1].set_title("Triplet Loss", fontsize=12)
+    axes[1].set_xlabel("Epochs")
+    axes[1].set_ylabel("Loss")
+    axes[1].grid(True, linestyle="--", alpha=0.6)
+
+    # Plot Accuracy
+    axes[2].plot(epochs, epoch_plt_data["accs"], label="Accuracy", color='g', marker='^')
+    axes[2].set_title("Accuracy", fontsize=12)
+    axes[2].set_xlabel("Epochs")
+    axes[2].set_ylabel("Accuracy")
+    axes[2].grid(True, linestyle="--", alpha=0.6)
+
+    # Adjust layout to prevent overlap
+    plt.tight_layout(rect=[0, 0, 1, 0.96])  # Adjust for suptitle
+
+    # Save the figure
+    plt.savefig(os.path.join(save_dir, "combined_metrics_horizontal.png"), dpi=300, bbox_inches="tight")
+
+    plt.close()
 
 
 def visualize_ranked_results(distmat, dataset, save_dir="log/ranked_results", topk=20):

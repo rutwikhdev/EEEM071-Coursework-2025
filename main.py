@@ -29,7 +29,7 @@ from src.utils.torchtools import (
     save_checkpoint,
     resume_from_checkpoint,
 )
-from src.utils.visualtools import visualize_ranked_results
+from src.utils.visualtools import save_plots, visualize_ranked_results
 import uuid
 
 # global variables
@@ -129,8 +129,14 @@ def main():
         print('Done. All layers are open to train for {} epochs'.format(args.max_epoch))
         optimizer.load_state_dict(initial_optim_state)
     """
+    batch_plt_data = {}
+    epoch_plt_data = {
+        "xent_losses": [], 
+        "htri_losses": [],
+        "accs": []
+    }
     for epoch in range(args.start_epoch, args.max_epoch):
-        train(
+        batch_metrics, epoch_metrics = train(
             epoch,
             model,
             criterion_xent,
@@ -139,6 +145,12 @@ def main():
             trainloader,
             use_gpu,
         )
+        # training metrics for one batch
+        batch_plt_data[f"epoch {epoch + 1}"] = batch_metrics
+        # average values of metrics for entire epoch
+        epoch_plt_data["xent_losses"].append(epoch_metrics[0])
+        epoch_plt_data["htri_losses"].append(epoch_metrics[1])
+        epoch_plt_data["accs"].append(epoch_metrics[2])
 
         scheduler.step()
 
@@ -167,6 +179,7 @@ def main():
                 },
                 args.save_dir,
             )
+    save_plots(args.arch, batch_plt_data, epoch_plt_data, args.save_dir)
 
     elapsed = round(time.time() - time_start)
     elapsed = str(datetime.timedelta(seconds=elapsed))
@@ -182,6 +195,11 @@ def train(
     accs = AverageMeter()
     batch_time = AverageMeter()
     data_time = AverageMeter()
+    plt_data = {
+        "xent_losses": [],
+        "htri_losses": [],
+        "accs": []
+    }
 
     model.train()
     for p in model.parameters():
@@ -234,8 +252,17 @@ def train(
                     acc=accs,
                 )
             )
+            plt_data["xent_losses"].append(round(xent_losses.val, 4))
+            plt_data["htri_losses"].append(round(htri_losses.val, 4))
+            plt_data["accs"].append(round(accs.val, 2))
 
         end = time.time()
+
+    return plt_data, [
+        round(xent_losses.avg, 4), 
+        round(htri_losses.avg, 4),
+        round(accs.avg, 2)
+    ]
 
 
 def test(
